@@ -1,0 +1,55 @@
+.relationship-web {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.relationship-svg {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+}
+
+.node-label {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  fill: var(--fg-1);
+}
+
+.node-label--center {
+  font-size: 8px;
+  fill: var(--fg-2);
+}
+
+.node-pulse {
+  animation: node-ping 700ms var(--ease) 1;
+  transform-origin: center;
+}
+
+@keyframes node-ping {
+  0% {
+    opacity: 0.9;
+    r: 14;
+  }
+  100% {
+    opacity: 0;
+    r: 26;
+  }
+}
+
+.relationship-legend {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  font-size: 10px;
+  color: var(--fg-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .node-pulse {
+    animation: none;
+    opacity: 0;
+  }
+}

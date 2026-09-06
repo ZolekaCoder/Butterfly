@@ -1,0 +1,42 @@
+.top-meters {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-6);
+  padding: var(--space-3) var(--space-6);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-1);
+}
+
+.meter-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.meter-value {
+  font-size: 15px;
+  color: var(--fg-0);
+}
+
+.meter-track {
+  height: 4px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.meter-bar {
+  height: 100%;
+  background: var(--fg-1);
+  transition: width var(--dur-change) var(--ease), background var(--dur-change) var(--ease);
+}
+
+.meter-bar--danger {
+  background: var(--danger);
+}
+
+.meter-bar--positive {
+  background: var(--positive);
+}

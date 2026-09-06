@@ -1,0 +1,143 @@
+.live-minds {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.live-minds-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.mind-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--fg-2);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  transition: border-color var(--dur-change) var(--ease);
+}
+
+.mind-card--thinking {
+  border-color: var(--border-strong);
+}
+
+.mind-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.mind-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-0);
+}
+
+.mind-status {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg-2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mind-status--thinking {
+  color: var(--fg-1);
+}
+
+.mind-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: mind-pulse 1.1s var(--ease) infinite;
+}
+
+@keyframes mind-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.mind-title {
+  font-size: 11px;
+  color: var(--fg-2);
+  margin-bottom: 8px;
+}
+
+.mind-quote {
+  font-size: 12px;
+  color: var(--fg-1);
+  line-height: 1.45;
+  min-height: 32px;
+}
+
+.mind-trust {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+
+/* Interception: this role's high-impact call is paused for a human decision
+   while every other card keeps updating normally. */
+.mind-card--pending {
+  border-color: var(--accent);
+}
+
+.mind-status--pending {
+  color: var(--accent);
+}
+
+.mind-countdown {
+  font-size: 11px;
+  color: var(--fg-2);
+  margin-top: 6px;
+}
+
+.mind-decision {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: 10px;
+}
+
+.decision-btn {
+  flex: 1;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--fg-0);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 7px 0;
+  cursor: pointer;
+  transition: background var(--dur-micro) var(--ease), border-color var(--dur-micro) var(--ease);
+}
+
+.decision-btn:hover {
+  background: var(--bg-0);
+  border-color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mind-dot {
+    animation: none;
+  }
+}

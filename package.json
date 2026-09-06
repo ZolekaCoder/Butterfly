@@ -1,0 +1,24 @@
+{
+  "name": "butterfly",
+  "private": true,
+  "version": "0.1.0",
+  "description": "One decision. A world of agents. Watch the consequences unfold.",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,web -c blue,magenta \"npm run dev -w server\" \"npm run dev -w web\"",
+    "dev:server": "npm run dev -w server",
+    "dev:web": "npm run dev -w web",
+    "build": "npm run build -w server && npm run build -w web",
+    "prove-concurrency": "npm run prove-concurrency -w server",
+    "prove-interception": "npm run prove-interception -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "engines": {
+    "node": ">=18.17"
+  }
+}
