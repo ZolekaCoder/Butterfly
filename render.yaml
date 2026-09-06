@@ -14,7 +14,13 @@ services:
     plan: free # cold starts after ~15 min idle; switch to "starter" in the dashboard for always-on during judging
     region: oregon
     branch: main
-    buildCommand: npm ci && npm run build -w server
+    # --include=dev is required: NODE_ENV=production (set below) is also
+    # present during the build step, and npm ci otherwise skips
+    # devDependencies entirely — including typescript itself and the
+    # @types/* packages the build needs. Verified locally: dropping this
+    # flag reproduces exactly the "Could not find a declaration file" build
+    # failure seen on Render's first deploy.
+    buildCommand: npm ci --include=dev && npm run build -w server
     startCommand: npm run start -w server
     healthCheckPath: /healthz
     envVars:
