@@ -1,0 +1,31 @@
+# Render Blueprint for Butterfly's backend (the Mozaik runtime + Express/SSE
+# server). See "Production deployment" in README.md for the full deploy
+# walkthrough. The frontend deploys separately on Vercel and is not part of
+# this blueprint.
+#
+# Deliberately a plain "web" service, not a serverless/edge target: Butterfly
+# holds its world state in-process and runs concurrent, unawaited runLoops
+# in the background, and serves a long-lived SSE stream — all of which need
+# a genuinely persistent Node process, not a per-request function.
+services:
+  - type: web
+    name: butterfly-server
+    runtime: node
+    plan: free # cold starts after ~15 min idle; switch to "starter" in the dashboard for always-on during judging
+    region: oregon
+    branch: main
+    buildCommand: npm ci && npm run build -w server
+    startCommand: npm run start -w server
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MOZAIK_MODEL
+        value: claude-haiku-4-5
+      - key: MAX_INTERVENTIONS_PER_HOUR
+        value: "200"
+      # Set for real in the Render dashboard — never committed:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false

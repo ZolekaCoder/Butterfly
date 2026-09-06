@@ -285,6 +285,8 @@ npm run dev
 | `MOZAIK_MODEL` | no | `claude-haiku-4-5` | Any model id `@mozaik-ai/core` supports; one knob for all four agents |
 | `PORT` | no | `8787` | Server port |
 | `VITE_API_URL` | no | `http://localhost:8787` | Where the frontend looks for the server |
+| `ALLOWED_ORIGINS` | no | unset (any origin) | Comma-separated browser origins allowed in production — see Production deployment |
+| `MAX_INTERVENTIONS_PER_HOUR` | no | `200` | Server-wide ceiling on intervention-triggered agent runs per hour |
 
 ### Run commands
 
@@ -295,6 +297,67 @@ npm run dev
 | `npm run prove-concurrency` | Headless proof: one event, four agents, real timestamps, no browser |
 | `npm run prove-interception` | Headless proof: seeds high evidence, exercises a real veto and a real auto-approve against the live API |
 | `npm run build` | Production build of both workspaces |
+
+## Production deployment
+
+The frontend (`web/`) deploys to Vercel as a static Vite build — nothing unusual there. The backend
+(`server/`) is a different matter: it holds `HeistState` in process memory, fires concurrent
+`runLoop` calls that keep running in the background after a request returns, and serves a long-lived
+SSE stream. None of that survives a serverless/edge function's per-request lifecycle, so the backend
+needs an actual persistent Node process — **Render** is what this repo is set up for
+([`render.yaml`](render.yaml)), chosen specifically because its default "web service" is a genuine
+long-running process (not serverless), defaults to exactly one instance (matching Butterfly's
+single, in-process `HeistState` — this must never be scaled to multiple instances, or the world
+state fragments across them), and has no execution-time limit that would kill an SSE connection.
+
+### Deploy the backend (Render)
+
+1. Sign in to [dashboard.render.com](https://dashboard.render.com) (a personal account — this
+   should not be tied to any work/organization identity).
+2. **New +** → **Blueprint** → connect the GitHub repo. Render detects `render.yaml` and proposes one
+   service, `butterfly-server`.
+3. Click **Apply**. It will fail to boot until step 4 — that's expected, `ANTHROPIC_API_KEY` isn't
+   set yet.
+4. Open the new service → **Environment** → add:
+   - `ANTHROPIC_API_KEY` — your real key. Only ever set here, never committed.
+   - `ALLOWED_ORIGINS` — your Vercel frontend's exact origin, e.g. `https://butterfly.vercel.app`
+     (comma-separate more than one if you have preview URLs to allow too).
+   Save — this triggers a redeploy.
+5. Note the service's public URL (Render shows it at the top of the service page, something like
+   `https://butterfly-server.onrender.com`).
+6. The committed `plan: free` spins the service down after ~15 minutes idle (next request then pays
+   a cold-start, usually well under a minute). For guaranteed-warm reliability during a judging
+   window, change the plan to **Starter** (~$7/month) in the service's **Settings** — purely a cost
+   call, nothing else about the deploy changes.
+
+### Point the frontend at it (Vercel)
+
+1. Vercel project → **Settings → Environment Variables** → add `VITE_API_URL` = the Render URL from
+   step 5 above, for the **Production** environment.
+2. `VITE_API_URL` is baked in at build time (it's a Vite env var), so adding it alone doesn't update
+   an already-built deployment — trigger a new one (**Deployments → Redeploy**, or push a commit).
+
+### What actually changes for production vs. local dev
+
+- **CORS**: unset `ALLOWED_ORIGINS` (the local default) keeps the original any-origin behavior —
+  `npm run dev` needs no changes. Setting it (as step 4 above does) switches the server to only
+  accepting browser requests from those exact origins; see
+  [`server/src/http/cors-config.ts`](server/src/http/cors-config.ts).
+- **Abuse protection**: this is a public URL now backed by real, metered Anthropic API calls. `POST
+  /api/intervene` — the one endpoint that fans out into up to four concurrent Claude calls — sits
+  behind a per-IP limiter (30 per 15 minutes: generous for a judge, useless for a script) *and* a
+  hard server-wide ceiling on intervention-triggered runs per rolling hour
+  (`MAX_INTERVENTIONS_PER_HOUR`, default 200), so no single actor or distributed burst can run up an
+  unbounded bill. `/api/reset` and `/api/interception/:id/resolve` have lighter limiters of their
+  own. See [`server/src/http/rate-limit.ts`](server/src/http/rate-limit.ts).
+- **`trust proxy`**: Render (like any PaaS) sits in front of the app as one reverse-proxy hop.
+  Without `app.set("trust proxy", 1)`, every visitor's rate-limit bucket would collapse onto the
+  proxy's own address instead of their real IP — this is set unconditionally and is a no-op locally
+  (no proxy in front of `npm run dev`).
+- **Error responses**: a rejected CORS origin (or any other error Express catches) returns a plain
+  `403 {"error": "Request rejected."}` rather than Express's default HTML error page, which — outside
+  `NODE_ENV=production` — includes a full server-side stack trace with absolute file paths. Not
+  worth relying on Render happening to set `NODE_ENV` correctly.
 
 ## Demo scenario (the recorded 60–90s path)
 
