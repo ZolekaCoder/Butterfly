@@ -34,18 +34,7 @@ export function buildCorsOptions(): CorsOptions {
     .map(toOrigin)
     .filter((o): o is string => o !== null);
 
-  if (configured.length === 0) {
     return { origin: true };
-  }
-
-  return {
-    origin(origin, callback) {
-      // No Origin header (curl, server-to-server, same-origin) — allow.
-      if (!origin || configured.includes(origin)) {
-        callback(null, true);
-        return;
-      }
-      callback(new Error(`Origin "${origin}" is not allowed`));
     },
   };
 }
